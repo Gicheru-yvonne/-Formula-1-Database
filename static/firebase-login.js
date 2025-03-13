@@ -8,11 +8,11 @@ const firebaseConfig = {
     appId: "1:569288049886:web:77376ba2f7faf881116e4f"
 };
 
-// Initialize Firebase
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// Function to handle login
+
 function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
@@ -49,7 +49,7 @@ function logout() {
     });
 }
 
-// Update UI based on login state
+
 auth.onAuthStateChanged((user) => {
     if (user) {
         document.getElementById("user-email").innerText = user.email;
@@ -60,7 +60,7 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// ✅ Function to Add a Driver to Firestore
+
 function addDriver() {
     const driverData = {
         driver_name: document.getElementById("driver-name").value,
@@ -72,7 +72,7 @@ function addDriver() {
         team: document.getElementById("team").value
     };
 
-    // Check if any field is empty
+    
     if (Object.values(driverData).some(value => value === "" || isNaN(value) && typeof value !== "string")) {
         alert("Please fill out all fields correctly.");
         return;
@@ -102,7 +102,7 @@ function addDriver() {
     });
 }
 
-// ✅ Function to Add a Team to Firestore
+
 function addTeam() {
     const teamData = {
         team_name: document.getElementById("team-name").value,
@@ -113,7 +113,7 @@ function addTeam() {
         previous_season_position: parseInt(document.getElementById("previous-position").value)
     };
 
-    // Check if any field is empty
+   
     if (Object.values(teamData).some(value => value === "" || isNaN(value) && typeof value !== "string")) {
         alert("Please fill out all fields correctly.");
         return;
@@ -142,3 +142,47 @@ function addTeam() {
         alert("Error: " + error.message);
     });
 }
+function queryDrivers() {
+    const attribute = document.getElementById("query-attribute").value;
+    const condition = document.getElementById("query-condition").value;
+    const value = parseInt(document.getElementById("query-value").value);
+
+    if (isNaN(value)) {
+        alert("Please enter a valid number.");
+        return;
+    }
+
+    const queryData = { attribute, condition, value };
+
+    console.log("Sending Query: ", queryData);
+
+    fetch('/query_drivers', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(queryData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Query Results: ", data);
+        
+        const resultsList = document.getElementById("query-results");
+        resultsList.innerHTML = "";
+
+        if (data.drivers.length === 0) {
+            resultsList.innerHTML = "<li>No drivers found.</li>";
+        } else {
+            data.drivers.forEach(driver => {
+                const listItem = document.createElement("li");
+                listItem.textContent = `${driver.driver_name} - ${attribute}: ${driver[attribute]}`;
+                resultsList.appendChild(listItem);
+            });
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Failed to retrieve drivers.");
+    });
+}
+
