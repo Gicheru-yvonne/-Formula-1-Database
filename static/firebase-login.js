@@ -185,4 +185,48 @@ function queryDrivers() {
         alert("Failed to retrieve drivers.");
     });
 }
+function queryTeams() {
+    const attribute = document.getElementById("query-attribute").value;
+    const condition = document.getElementById("query-condition").value;
+    const value = parseInt(document.getElementById("query-value").value);
+
+    if (isNaN(value)) {
+        alert("Please enter a valid number.");
+        return;
+    }
+
+    const queryData = { attribute, condition, value };
+
+    console.log("Sending Query: ", queryData);
+
+    fetch('/query_teams', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(queryData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Query Results: ", data);
+        
+        const resultsList = document.getElementById("query-results");
+        resultsList.innerHTML = "";
+
+        if (data.teams.length === 0) {
+            resultsList.innerHTML = "<li>No teams found.</li>";
+        } else {
+            data.teams.forEach(team => {
+                const listItem = document.createElement("li");
+                listItem.textContent = `${team.team_name} - ${attribute}: ${team[attribute]}`;
+                resultsList.appendChild(listItem);
+            });
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Failed to retrieve teams.");
+    });
+}
+
 

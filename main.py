@@ -78,3 +78,38 @@ async def query_drivers(query: Query):
         return JSONResponse(status_code=200, content={"drivers": driver_list})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+class Team(BaseModel):
+    team_name: str
+    year_founded: int
+    constructor_titles: int
+    pole_positions: int
+    race_wins: int
+    previous_season_position: int
+
+@app.post("/add_team")
+async def add_team(team: Team):
+    try:
+        team_ref = db.collection("teams").document()
+        team_ref.set(team.dict())
+        return JSONResponse(status_code=200, content={"message": "Team added successfully!"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/query_teams")
+async def query_teams(query: Query):
+    try:
+        query_ref = db.collection("teams")
+        
+        if query.condition == "lt":
+            query_ref = query_ref.where(query.attribute, "<", query.value)
+        elif query.condition == "gt":
+            query_ref = query_ref.where(query.attribute, ">", query.value)
+        elif query.condition == "eq":
+            query_ref = query_ref.where(query.attribute, "==", query.value)
+
+        results = query_ref.stream()
+        team_list = [{"id": doc.id, **doc.to_dict()} for doc in results]
+
+        return JSONResponse(status_code=200, content={"teams": team_list})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})

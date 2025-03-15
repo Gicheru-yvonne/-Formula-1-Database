@@ -28,3 +28,30 @@
     <button onclick="location.href='/login'">Back to Home</button>
 </body>
 </html>
+<hr>
+<h2>Query Teams</h2>
+<form id="query-team-form">
+    <label for="query-attribute">Select Attribute:</label>
+    <select id="query-attribute">
+        <option value="year_founded">Year Founded</option>
+        <option value="constructor_titles">Total Constructor Titles</option>
+        <option value="pole_positions">Total Pole Positions</option>
+        <option value="race_wins">Total Race Wins</option>
+        <option value="previous_season_position">Finishing Position Last Season</option>
+    </select>
+
+    <label for="query-condition">Select Condition:</label>
+    <select id="query-condition">
+        <option value="gt">Greater than</option>
+        <option value="lt">Less than</option>
+        <option value="eq">Equal to</option>
+    </select>
+
+    <label for="query-value">Enter Value:</label>
+    <input type="number" id="query-value" required>
+
+    <button type="button" onclick="queryTeams()">Search</button>
+</form>
+
+<h3>Results</h3>
+<ul id="query-results"></ul>
