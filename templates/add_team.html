@@ -1,57 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Team</title>
-    <script src="/static/firebase-login.js"></script>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Add Team</title>
+    
+        <!-- ✅ Load Firebase Before firebase-login.js -->
+        <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+        <script src="/static/firebase-login.js"></script>
+        <link rel="stylesheet" href="/static/styles.css">
+    </head>
+    
 <body>
     <h1>Add a Team</h1>
-    <form id="add-team-form">
-        <label for="team-name">Team Name:</label>
-        <input type="text" id="team-name" required>
-        <label for="year-founded">Year Founded:</label>
-        <input type="number" id="year-founded" required>
-        <label for="constructor-titles">Total Constructor Titles:</label>
-        <input type="number" id="constructor-titles" required>
-        <label for="pole-positions-team">Total Pole Positions:</label>
-        <input type="number" id="pole-positions-team" required>
-        <label for="race-wins">Total Race Wins:</label>
-        <input type="number" id="race-wins" required>
-        <label for="previous-position">Finishing Position Last Season:</label>
-        <input type="number" id="previous-position" required>
-        <button type="button" onclick="addTeam()">Add Team</button>
+    <div id="add-team-form">
+        <form>
+            <label for="team_name">Team Name:</label>
+            <input type="text" id="team_name" required>
+            <label for="year_founded">Year Founded:</label>
+            <input type="number" id="year_founded" required>
+            <label for="constructor_titles">Total Constructor Titles:</label>
+            <input type="number" id="constructor_titles" required>
+            <label for="pole_positions">Total Pole Positions:</label>
+            <input type="number" id="pole_positions" required>
+            <label for="race_wins">Total Race Wins:</label>
+            <input type="number" id="race_wins" required>
+            <label for="previous_season_position">Finishing Position Last Season:</label>
+            <input type="number" id="previous_season_position" required>
+
+            <button type="button" onclick="addTeam()">Add Team</button>
+        </form>
+    </div>
+    
+    <hr>
+    
+    <h2>Query Teams</h2>
+    <form id="query-team-form">
+        <label for="query-attribute">Select Attribute:</label>
+        <select id="query-attribute">
+            <option value="year_founded">Year Founded</option>
+            <option value="constructor_titles">Total Constructor Titles</option>
+            <option value="pole_positions">Total Pole Positions</option>
+            <option value="race_wins">Total Race Wins</option>
+            <option value="previous_season_position">Finishing Position Last Season</option>
+        </select>
+    
+        <label for="query-condition">Select Condition:</label>
+        <select id="query-condition">
+            <option value="gt">Greater than</option>
+            <option value="lt">Less than</option>
+            <option value="eq">Equal to</option>
+        </select>
+    
+        <label for="query-value">Enter Value:</label>
+        <input type="number" id="query-value" required>
+    
+        <button type="button" onclick="queryTeams()">Search</button>
     </form>
-    <br>
-    <button onclick="location.href='/login'">Back to Home</button>
-</body>
-</html>
-<hr>
-<h2>Query Teams</h2>
-<form id="query-team-form">
-    <label for="query-attribute">Select Attribute:</label>
-    <select id="query-attribute">
-        <option value="year_founded">Year Founded</option>
-        <option value="constructor_titles">Total Constructor Titles</option>
-        <option value="pole_positions">Total Pole Positions</option>
-        <option value="race_wins">Total Race Wins</option>
-        <option value="previous_season_position">Finishing Position Last Season</option>
-    </select>
-
-    <label for="query-condition">Select Condition:</label>
-    <select id="query-condition">
-        <option value="gt">Greater than</option>
-        <option value="lt">Less than</option>
-        <option value="eq">Equal to</option>
-    </select>
-
-    <label for="query-value">Enter Value:</label>
-    <input type="number" id="query-value" required>
-
-    <button type="button" onclick="queryTeams()">Search</button>
-</form>
-
-<h3>Results</h3>
-<ul id="query-results"></ul>
+    
+    <h3>Results</h3>
+    <ul id="query-results"></ul>
+    

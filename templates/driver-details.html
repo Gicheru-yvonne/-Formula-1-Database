@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Details</title>
+    <script src="/static/firebase-login.js"></script>
+</head>
+<body>
+    <h1>Driver Details</h1>
+    <div id="driver-info"></div>
+    <button onclick="location.href='/add_driver_page'">Back to Drivers</button>
+
+    <script>
+function fetchDriverDetails() {
+    const driverId = window.location.pathname.split("/").pop();
+    
+    fetch(`/driver/${driverId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            document.getElementById("driver-info").innerHTML = `<p>Error: ${data.error}</p>`;
+        } else {
+            document.getElementById("driver-info").innerHTML = `
+                <p><strong>Name:</strong> ${data.driver_name}</p>
+                <p><strong>Age:</strong> ${data.age}</p>
+                <p><strong>Points Scored:</strong> ${data.points_scored}</p>
+                <p><strong>World Titles:</strong> ${data.world_titles}</p>
+                <p><strong>Pole Positions:</strong> ${data.pole_positions}</p>
+                <p><strong>Fastest Laps:</strong> ${data.fastest_laps}</p>
+                <p><strong>Team:</strong> ${data.team}</p>
+            `;
+        }
+    })
+    .catch(error => {
+        document.getElementById("driver-info").innerHTML = `<p>Error loading driver data.</p>`;
+        console.error(error);
+    });
+}
+
+
+        window.onload = fetchDriverDetails;
+    </script>
+</body>
+</html>

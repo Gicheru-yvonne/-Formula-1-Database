@@ -1,34 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Driver</title>
-    <script src="/static/firebase-login.js"></script>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Add Team</title>
+    
+        <!-- ✅ Load Firebase Before firebase-login.js -->
+        <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+        <script src="/static/firebase-login.js"></script>
+        <link rel="stylesheet" href="/static/styles.css">
+    </head>
+    
 <body>
     <h1>Add a Driver</h1>
-    <form id="add-driver-form">
-        <label for="driver-name">Driver Name:</label>
-        <input type="text" id="driver-name" required>
-        <label for="age">Age:</label>
-        <input type="number" id="age" required>
-        <label for="points">Total Points Scored:</label>
-        <input type="number" id="points" required>
-        <label for="world-titles">Total World Titles:</label>
-        <input type="number" id="world-titles" required>
-        <label for="pole-positions">Total Pole Positions:</label>
-        <input type="number" id="pole-positions" required>
-        <label for="fastest-laps">Total Fastest Laps:</label>
-        <input type="number" id="fastest-laps" required>
-        <label for="team">Team:</label>
-        <input type="text" id="team" required>
-        <button type="button" onclick="addDriver()">Add Driver</button>
-    </form>
-
+    <div id="add-driver-form">
+        <form>
+            <label for="driver_name">Driver Name:</label>
+            <input type="text" id="driver_name" required>
+            <label for="age">Age:</label>
+            <input type="number" id="age" required>
+            <label for="points">Total Points Scored:</label>
+            <input type="number" id="points" required>
+            <label for="world-titles">Total World Titles:</label>
+            <input type="number" id="world-titles" required>
+            <label for="pole-positions">Total Pole Positions:</label>
+            <input type="number" id="pole-positions" required>
+            <label for="fastest-laps">Total Fastest Laps:</label>
+            <input type="number" id="fastest-laps" required>
+            <label for="team">Team:</label>
+            <input type="text" id="team" required>
+            <button type="button" onclick="addDriver()">Add Driver</button>
+        </form>
+    </div>
+    
     <hr>
-
+    
     <h2>Query Drivers</h2>
     <form id="query-driver-form">
         <label for="query-attribute">Select Attribute:</label>
@@ -39,24 +47,68 @@
             <option value="pole_positions">Total Pole Positions</option>
             <option value="fastest_laps">Total Fastest Laps</option>
         </select>
-
+    
         <label for="query-condition">Condition:</label>
         <select id="query-condition">
             <option value="lt">Less Than</option>
             <option value="gt">Greater Than</option>
             <option value="eq">Equal To</option>
         </select>
-
+    
         <label for="query-value">Value:</label>
         <input type="number" id="query-value" required>
-
+    
         <button type="button" onclick="queryDrivers()">Search</button>
     </form>
-
+    
     <h3>Results:</h3>
     <ul id="query-results"></ul>
+    
 
     <br>
     <button onclick="location.href='/login'">Back to Home</button>
+    <h3>Results:</h3>
+<ul id="query-results"></ul>
+
+<script>
+function queryDrivers() {
+    const attribute = document.getElementById("query-attribute").value;
+    const condition = document.getElementById("query-condition").value;
+    const value = parseInt(document.getElementById("query-value").value);
+
+    if (isNaN(value)) {
+        alert("Please enter a valid number.");
+        return;
+    }
+
+    const queryData = { attribute, condition, value };
+
+    fetch('/query_drivers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(queryData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultsList = document.getElementById("query-results");
+        resultsList.innerHTML = "";
+
+        if (data.drivers.length === 0) {
+            resultsList.innerHTML = "<li>No drivers found.</li>";
+        } else {
+            data.drivers.forEach(driver => {
+                const listItem = document.createElement("li");
+                listItem.innerHTML = `<a href="/driver/${driver.id}">${driver.driver_name}</a>`;
+                resultsList.appendChild(listItem);
+            });
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Failed to retrieve drivers.");
+    });
+}
+</script>
+
 </body>
 </html>
