@@ -7,22 +7,22 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi import Depends
 from pydantic import BaseModel
 
-# Initialize Firebase Admin SDK
+
 cred = credentials.Certificate("my-project-yvonne-9ff25-firebase-adminsdk-fbsvc-4f21b6fbeb.json")
 firebase_admin.initialize_app(cred)
 
-# Firestore client
+
 db = firestore.client()
 
 app = FastAPI()
 
-# Mount static directory
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Templates
+
 templates = Jinja2Templates(directory="templates")
 
-# Routes for pages
+
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     return templates.TemplateResponse("main.html", {"request": request})
@@ -43,6 +43,39 @@ async def driver_detail_json(driver_id: str):
     
     driver_data = driver_doc.to_dict()
     return JSONResponse(status_code=200, content=driver_data)
+
+@app.get("/team/{team_id}")
+async def get_team_json(team_id: str):
+    team_doc = db.collection("teams").document(team_id).get()
+    if not team_doc.exists:
+        return JSONResponse(status_code=404, content={"error": "Team not found"})
+
+    return JSONResponse(status_code=200, content=team_doc.to_dict())
+
+@app.get("/all_drivers")
+async def get_all_drivers():
+    try:
+        drivers_ref = db.collection("drivers").stream()
+        driver_list = [{"id": doc.id, **doc.to_dict()} for doc in drivers_ref]
+
+        return JSONResponse(status_code=200, content={"drivers": driver_list})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/all_teams")
+async def get_all_teams():
+    try:
+        teams_ref = db.collection("teams").stream()
+        team_list = [{"id": doc.id, **doc.to_dict()} for doc in teams_ref]
+
+        return JSONResponse(status_code=200, content={"teams": team_list})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+
+
+
 
 
 
@@ -72,7 +105,7 @@ class Query(BaseModel):
 
 
 
-# ✅ Function to verify authentication token
+
 def verify_token(authorization: str = Header(None)):
     if not authorization or "Bearer " not in authorization:
         raise HTTPException(status_code=401, detail="Missing authentication token")
@@ -101,7 +134,7 @@ async def add_driver(driver: Driver, authorization: str = Header(None)):
 @app.post("/add_team")
 async def add_team(team: Team, authorization: str = Header(None)):
     try:
-        # ✅ Verify authentication token
+       
         if not authorization or "Bearer " not in authorization:
             raise HTTPException(status_code=401, detail="Missing authentication token")
         
@@ -112,11 +145,11 @@ async def add_team(team: Team, authorization: str = Header(None)):
         print("🔍 Received Team Data:", team.dict())  # ✅ Debugging line
         print(f"👤 User ID: {user_id}")
         
-        # ✅ Ensure required fields are not empty
+        
         if not team.team_name or team.year_founded <= 0:
             raise HTTPException(status_code=400, detail="Team name and year founded are required.")
         
-        # ✅ Save to Firestore
+        
         team_ref = db.collection("teams").document()
         team_ref.set(team.dict())
         
@@ -130,7 +163,7 @@ async def add_team(team: Team, authorization: str = Header(None)):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-# ✅ Query drivers (remains open to all users)
+
 @app.post("/query_drivers")
 async def query_drivers(query: Query):
     try:
@@ -149,8 +182,9 @@ async def query_drivers(query: Query):
         return JSONResponse(status_code=200, content={"drivers": driver_list})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+    
 
-# ✅ Query teams (remains open to all users)
+
 @app.post("/query_teams")
 async def query_teams(query: Query):
     try:
@@ -168,4 +202,19 @@ async def query_teams(query: Query):
 
         return JSONResponse(status_code=200, content={"teams": team_list})
     except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    
+
+@app.post("/update_driver/{driver_id}")
+async def update_driver(driver_id: str, updated_driver: Driver):
+    try:
+        driver_ref = db.collection("drivers").document(driver_id)
+        if not driver_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Driver not found")
+
+        driver_ref.update(updated_driver.dict())
+        return JSONResponse(status_code=200, content={"message": "Driver updated successfully!"})
+
+    except Exception as e:
+        print("❌ Error updating driver:", str(e))
         return JSONResponse(status_code=500, content={"error": str(e)})

@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Add Team</title>
     
-        <!-- ✅ Load Firebase Before firebase-login.js -->
+        
         <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
         <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
@@ -29,10 +29,16 @@
             <input type="number" id="race_wins" required>
             <label for="previous_season_position">Finishing Position Last Season:</label>
             <input type="number" id="previous_season_position" required>
-
+    
             <button type="button" onclick="addTeam()">Add Team</button>
         </form>
     </div>
+    
+    <hr>
+    
+    
+    <h2>All Teams</h2>
+    <ul id="all-teams-list"></ul>
     
     <hr>
     
@@ -62,4 +68,82 @@
     
     <h3>Results</h3>
     <ul id="query-results"></ul>
+    
+    
+    <button onclick="window.location.href='/login'" 
+            style="display: block; margin-top: 20px; padding: 10px 20px; background-color: blue; color: white; border: none; cursor: pointer;">
+        Back to Home
+    </button>
+    
+
+    <script>
+        function loadAllTeams() {
+            const resultsList = document.getElementById("all-teams-list");
+            resultsList.innerHTML = ""; 
+
+            fetch('/all_teams')  
+            .then(response => response.json())
+            .then(data => {
+                if (!data.teams || data.teams.length === 0) {
+                    resultsList.innerHTML = "<li>No teams available.</li>";
+                } else {
+                    data.teams.forEach(team => {
+                        const listItem = document.createElement("li");
+                        listItem.innerHTML = `<a href="/team/${team.id}">${team.team_name}</a>`;
+                        resultsList.appendChild(listItem);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Failed to load teams.");
+            });
+        }
+
+        function queryTeams() {
+            const attribute = document.getElementById("query-attribute").value;
+            const condition = document.getElementById("query-condition").value;
+            const value = document.getElementById("query-value").value.trim();
+
+            if (value === "" || isNaN(value)) {
+                alert("Please enter a valid number.");
+                return;
+            }
+
+            const queryData = { attribute, condition, value: parseInt(value) };
+
+            fetch('/query_teams', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(queryData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultsList = document.getElementById("query-results");
+                resultsList.innerHTML = "";
+
+                if (!data.teams || data.teams.length === 0) {
+                    resultsList.innerHTML = "<li>No teams found.</li>";
+                } else {
+                    data.teams.forEach(team => {
+                        const listItem = document.createElement("li");
+                        listItem.innerHTML = `<a href="/team/${team.id}">${team.team_name}</a>`;
+                        resultsList.appendChild(listItem);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Failed to retrieve teams.");
+            });
+        }
+
+        
+        window.onload = () => {
+            loadAllTeams();
+        };
+    </script>
+
+</body>
+</html>
     

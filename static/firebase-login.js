@@ -1,4 +1,3 @@
-// Firebase configuration (Replace with your own credentials)
 const firebaseConfig = {
     apiKey: "AIzaSyCtrT-uXPnvYYeE88C6sOPL3diA4LNzg1c",
     authDomain: "my-project-yvonne-9ff25.firebaseapp.com",
@@ -19,11 +18,11 @@ function login() {
     .then((userCredential) => {
         console.log("✅ Login Successful:", userCredential.user.email);
         document.cookie = `token=${userCredential.user.accessToken}; path=/; SameSite=Strict`;
-        window.location.reload(); // ✅ Refresh the page after login
+        window.location.reload(); 
     })
     .catch((error) => {
         console.error("❌ Login Error:", error.message);
-        alert("Login failed: " + error.message); // ✅ Show login error message
+        alert("Login failed: " + error.message); 
     });
 }
 
@@ -94,7 +93,7 @@ function addDriver() {
             console.log("🔍 Response from Server:", data);
             if (data.message) {
                 alert("✅ Driver Added: " + data.message);
-                document.querySelector("#add-driver-form form").reset(); // ✅ Corrected
+                document.querySelector("#add-driver-form form").reset(); 
             } else {
                 throw new Error(data.error || "Error adding driver.");
             }
@@ -124,7 +123,7 @@ function addTeam() {
         };
         
 
-        // ✅ Ensure all required fields are filled
+        
         if (!teamData.team_name || teamData.year_founded === 0) {
             alert("Error: Team name and year founded are required.");
             return;
@@ -158,42 +157,41 @@ function addTeam() {
 }
 
 
+function queryDrivers(showAll = false) {
+    const resultsList = document.getElementById("query-results");
+    resultsList.innerHTML = ""; 
 
+    let queryData = {};
+    
+    if (!showAll) {
+        const attribute = document.getElementById("query-attribute").value;
+        const condition = document.getElementById("query-condition").value;
+        const value = document.getElementById("query-value").value.trim(); 
 
-function queryDrivers() {
-    const attribute = document.getElementById("query-attribute").value;
-    const condition = document.getElementById("query-condition").value;
-    const value = parseInt(document.getElementById("query-value").value);
+        if (value === "" || isNaN(value)) {  
+            alert("Please enter a valid number.");
+            return;
+        }
 
-    if (isNaN(value)) {
-        alert("Please enter a valid number.");
-        return;
+        queryData = { attribute, condition, value: parseInt(value) };
     }
-
-    const queryData = { attribute, condition, value };
-
-    console.log("Sending Query: ", queryData);
 
     fetch('/query_drivers', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(queryData)
     })
     .then(response => response.json())
     .then(data => {
-        console.log("Query Results: ", data);
-        
-        const resultsList = document.getElementById("query-results");
-        resultsList.innerHTML = "";
-
-        if (data.drivers.length === 0) {
+        if (!data.drivers || data.drivers.length === 0) {
             resultsList.innerHTML = "<li>No drivers found.</li>";
         } else {
             data.drivers.forEach(driver => {
                 const listItem = document.createElement("li");
-                listItem.textContent = `${driver.driver_name} - ${attribute}: ${driver[attribute]}`;
+                listItem.innerHTML = `
+                    <a href="/driver/${driver.id}">${driver.driver_name}</a>
+                    <button onclick="editDriver('${driver.id}')">Edit</button>
+                `;
                 resultsList.appendChild(listItem);
             });
         }
@@ -203,6 +201,16 @@ function queryDrivers() {
         alert("Failed to retrieve drivers.");
     });
 }
+
+
+window.onload = () => {
+    if (document.getElementById("query-results")) {
+        queryDrivers(true);
+    }
+};
+
+
+
 function queryTeams() {
     const attribute = document.getElementById("query-attribute").value;
     const condition = document.getElementById("query-condition").value;
@@ -229,14 +237,14 @@ function queryTeams() {
         console.log("Query Results: ", data);
         
         const resultsList = document.getElementById("query-results");
-        resultsList.innerHTML = "";
+        resultsList.innerHTML = ""; 
 
         if (data.teams.length === 0) {
             resultsList.innerHTML = "<li>No teams found.</li>";
         } else {
             data.teams.forEach(team => {
                 const listItem = document.createElement("li");
-                listItem.textContent = `${team.team_name} - ${attribute}: ${team[attribute]}`;
+                listItem.innerHTML = `<a href="/team/${team.id}">${team.team_name}</a>`;
                 resultsList.appendChild(listItem);
             });
         }
@@ -246,5 +254,81 @@ function queryTeams() {
         alert("Failed to retrieve teams.");
     });
 }
+function editDriver(driverId) {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert("You must be logged in to edit a driver.");
+        return;
+    }
+
+    user.getIdToken().then((token) => {
+        
+        const driverData = {
+            driver_name: document.getElementById("edit-driver-name").value.trim(),
+            age: parseInt(document.getElementById("edit-age").value) || 0,
+            points_scored: parseInt(document.getElementById("edit-points").value) || 0,
+            world_titles: parseInt(document.getElementById("edit-world-titles").value) || 0,
+            pole_positions: parseInt(document.getElementById("edit-pole-positions").value) || 0,
+            fastest_laps: parseInt(document.getElementById("edit-fastest-laps").value) || 0,
+            team: document.getElementById("edit-team").value.trim()
+        };
+
+        fetch(`/edit_driver/${driverId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(driverData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert("✅ Driver updated successfully!");
+                window.location.href = `/driver/${driverId}`; 
+            } else {
+                throw new Error(data.error || "Error updating driver.");
+            }
+        })
+        .catch(error => {
+            alert("Error: " + error.message);
+        });
+    });
+}
+
+function loadAllDrivers() {
+    const resultsList = document.getElementById("all-drivers-list");
+    resultsList.innerHTML = ""; 
+
+    fetch('/query_drivers', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ showAll: true })  
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.drivers || data.drivers.length === 0) {
+            resultsList.innerHTML = "<li>No drivers available.</li>";
+        } else {
+            data.drivers.forEach(driver => {
+                const listItem = document.createElement("li");
+                listItem.innerHTML = `
+                    <a href="/driver/${driver.id}">${driver.driver_name}</a>
+                    <button onclick="editDriver('${driver.id}')">Edit</button>
+                `;
+                resultsList.appendChild(listItem);
+            });
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Failed to load drivers.");
+    });
+}
 
 
+window.onload = () => {
+    if (document.getElementById("all-drivers-list")) {
+        loadAllDrivers();  
+    }
+};

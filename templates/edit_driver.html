@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Driver</title>
+    <script src="/static/firebase-login.js"></script>
+</head>
+<body>
+    <h1>Edit Driver</h1>
+    <form id="edit-driver-form">
+        <input type="hidden" id="driver-id">
+        <label for="driver_name">Driver Name:</label>
+        <input type="text" id="driver_name" required>
+        <label for="age">Age:</label>
+        <input type="number" id="age" required>
+        <label for="points_scored">Total Points Scored:</label>
+        <input type="number" id="points_scored" required>
+        <label for="world_titles">Total World Titles:</label>
+        <input type="number" id="world_titles" required>
+        <label for="pole_positions">Total Pole Positions:</label>
+        <input type="number" id="pole_positions" required>
+        <label for="fastest_laps">Total Fastest Laps:</label>
+        <input type="number" id="fastest_laps" required>
+        <label for="team">Team:</label>
+        <input type="text" id="team" required>
+        <button type="button" onclick="updateDriver()">Save Changes</button>
+    </form>
+    <button onclick="location.href='/add_driver_page'">Back to Drivers</button>
+
+    <script>
+        function loadDriverData() {
+            const driverId = window.location.pathname.split("/").pop();
+            fetch(`/driver/${driverId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Error: " + data.error);
+                    return;
+                }
+                document.getElementById("driver-id").value = driverId;
+                document.getElementById("driver_name").value = data.driver_name;
+                document.getElementById("age").value = data.age;
+                document.getElementById("points_scored").value = data.points_scored;
+                document.getElementById("world_titles").value = data.world_titles;
+                document.getElementById("pole_positions").value = data.pole_positions;
+                document.getElementById("fastest_laps").value = data.fastest_laps;
+                document.getElementById("team").value = data.team;
+            })
+            .catch(error => {
+                console.error(error);
+                alert("Error loading driver data.");
+            });
+        }
+
+        function updateDriver() {
+            const driverId = document.getElementById("driver-id").value;
+            const updatedData = {
+                driver_name: document.getElementById("driver_name").value.trim(),
+                age: parseInt(document.getElementById("age").value),
+                points_scored: parseInt(document.getElementById("points_scored").value),
+                world_titles: parseInt(document.getElementById("world_titles").value),
+                pole_positions: parseInt(document.getElementById("pole_positions").value),
+                fastest_laps: parseInt(document.getElementById("fastest_laps").value),
+                team: document.getElementById("team").value.trim()
+            };
+
+            fetch(`/update_driver/${driverId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert("✅ Driver updated successfully!");
+                    window.location.href = "/add_driver_page";
+                } else {
+                    alert("Error: " + data.error);
+                }
+            })
+            .catch(error => {
+                console.error("Error updating driver:", error);
+                alert("Failed to update driver.");
+            });
+        }
+
+        window.onload = loadDriverData;
+    </script>
+</body>
+</html>

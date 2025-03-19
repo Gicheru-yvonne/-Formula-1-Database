@@ -3,9 +3,9 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Add Team</title>
+        <title>Add Driver</title>
     
-        <!-- ✅ Load Firebase Before firebase-login.js -->
+       
         <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
         <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
@@ -36,6 +36,13 @@
     </div>
     
     <hr>
+
+    
+    <h2>All Drivers</h2>
+    <ul id="all-drivers-list"></ul>
+
+    <hr>
+    
     
     <h2>Query Drivers</h2>
     <form id="query-driver-form">
@@ -60,55 +67,87 @@
     
         <button type="button" onclick="queryDrivers()">Search</button>
     </form>
-    
-    <h3>Results:</h3>
+
+   
+    <h3>Query Results:</h3>
     <ul id="query-results"></ul>
-    
 
     <br>
     <button onclick="location.href='/login'">Back to Home</button>
-    <h3>Results:</h3>
-<ul id="query-results"></ul>
 
-<script>
-function queryDrivers() {
-    const attribute = document.getElementById("query-attribute").value;
-    const condition = document.getElementById("query-condition").value;
-    const value = parseInt(document.getElementById("query-value").value);
+    <script>
 
-    if (isNaN(value)) {
-        alert("Please enter a valid number.");
-        return;
-    }
 
-    const queryData = { attribute, condition, value };
+        function loadAllDrivers() {
+    const resultsList = document.getElementById("all-drivers-list");
+    resultsList.innerHTML = ""; 
 
-    fetch('/query_drivers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(queryData)
-    })
+    fetch('/all_drivers')  
     .then(response => response.json())
     .then(data => {
-        const resultsList = document.getElementById("query-results");
-        resultsList.innerHTML = "";
-
-        if (data.drivers.length === 0) {
-            resultsList.innerHTML = "<li>No drivers found.</li>";
+        if (!data.drivers || data.drivers.length === 0) {
+            resultsList.innerHTML = "<li>No drivers available.</li>";
         } else {
             data.drivers.forEach(driver => {
                 const listItem = document.createElement("li");
-                listItem.innerHTML = `<a href="/driver/${driver.id}">${driver.driver_name}</a>`;
+                listItem.innerHTML = `
+                    <a href="/driver/${driver.id}">${driver.driver_name}</a>
+                    <button onclick="editDriver('${driver.id}')">Edit</button>
+                `;
                 resultsList.appendChild(listItem);
             });
         }
     })
     .catch(error => {
         console.error("Error:", error);
-        alert("Failed to retrieve drivers.");
+        alert("Failed to load drivers.");
     });
 }
-</script>
+
+
+        function queryDrivers() {
+            const attribute = document.getElementById("query-attribute").value;
+            const condition = document.getElementById("query-condition").value;
+            const value = document.getElementById("query-value").value.trim();
+
+            if (value === "" || isNaN(value)) {
+                alert("Please enter a valid number.");
+                return;
+            }
+
+            const queryData = { attribute, condition, value: parseInt(value) };
+
+            fetch('/query_drivers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(queryData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultsList = document.getElementById("query-results");
+                resultsList.innerHTML = "";
+
+                if (!data.drivers || data.drivers.length === 0) {
+                    resultsList.innerHTML = "<li>No drivers found.</li>";
+                } else {
+                    data.drivers.forEach(driver => {
+                        const listItem = document.createElement("li");
+                        listItem.innerHTML = `<a href="/driver/${driver.id}">${driver.driver_name}</a>`;
+                        resultsList.appendChild(listItem);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Failed to retrieve drivers.");
+            });
+        }
+
+       
+        window.onload = () => {
+            loadAllDrivers();
+        };
+    </script>
 
 </body>
 </html>

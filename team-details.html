@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Details</title>
+    <script src="/static/firebase-login.js"></script>
+</head>
+<body>
+    <h1>Team Details</h1>
+    <div id="team-info">
+        <p><strong>Name:</strong> <span id="team-name"></span></p>
+        <p><strong>Year Founded:</strong> <span id="team-year"></span></p>
+        <p><strong>Constructor Titles:</strong> <span id="team-titles"></span></p>
+        <p><strong>Total Pole Positions:</strong> <span id="team-poles"></span></p>
+        <p><strong>Total Race Wins:</strong> <span id="team-wins"></span></p>
+        <p><strong>Finishing Position Last Season:</strong> <span id="team-last-position"></span></p>
+    </div>
+
+    <button onclick="location.href='/add_team_page'">Back to Teams</button>
+
+    <script>
+        function fetchTeamDetails() {
+    const teamId = window.location.pathname.split("/").pop();
+
+    fetch(`/get_team/${teamId}`) 
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            document.getElementById("team-info").innerHTML = `<p>Error: ${data.error}</p>`;
+        } else {
+            document.getElementById("team-name").textContent = data.team_name;
+            document.getElementById("team-year").textContent = data.year_founded;
+            document.getElementById("team-titles").textContent = data.constructor_titles;
+            document.getElementById("team-poles").textContent = data.pole_positions;
+            document.getElementById("team-wins").textContent = data.race_wins;
+            document.getElementById("team-last-position").textContent = data.previous_season_position;
+        }
+    })
+    .catch(error => {
+        document.getElementById("team-info").innerHTML = `<p>Error loading team data.</p>`;
+        console.error(error);
+    });
+}
+
+
+window.onload = fetchTeamDetails;
+    </script>
+</body>
+</html>
