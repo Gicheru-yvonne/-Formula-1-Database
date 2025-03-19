@@ -255,47 +255,9 @@ function queryTeams() {
     });
 }
 function editDriver(driverId) {
-    const user = firebase.auth().currentUser;
-    if (!user) {
-        alert("You must be logged in to edit a driver.");
-        return;
-    }
-
-    user.getIdToken().then((token) => {
-        
-        const driverData = {
-            driver_name: document.getElementById("edit-driver-name").value.trim(),
-            age: parseInt(document.getElementById("edit-age").value) || 0,
-            points_scored: parseInt(document.getElementById("edit-points").value) || 0,
-            world_titles: parseInt(document.getElementById("edit-world-titles").value) || 0,
-            pole_positions: parseInt(document.getElementById("edit-pole-positions").value) || 0,
-            fastest_laps: parseInt(document.getElementById("edit-fastest-laps").value) || 0,
-            team: document.getElementById("edit-team").value.trim()
-        };
-
-        fetch(`/edit_driver/${driverId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(driverData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                alert("✅ Driver updated successfully!");
-                window.location.href = `/driver/${driverId}`; 
-            } else {
-                throw new Error(data.error || "Error updating driver.");
-            }
-        })
-        .catch(error => {
-            alert("Error: " + error.message);
-        });
-    });
+    // Redirect to the edit driver page with the driver ID in the URL
+    window.location.href = `/edit_driver/${driverId}`;
 }
-
 function loadAllDrivers() {
     const resultsList = document.getElementById("all-drivers-list");
     resultsList.innerHTML = ""; 

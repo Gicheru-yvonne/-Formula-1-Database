@@ -35,6 +35,10 @@ async def add_driver_page(request: Request):
 async def add_team_page(request: Request):
     return templates.TemplateResponse("add_team.html", {"request": request})
 
+@app.get("/edit_driver/{driver_id}", response_class=HTMLResponse)
+async def edit_driver_page(request: Request, driver_id: str):
+    return templates.TemplateResponse("edit_driver.html", {"request": request, "driver_id": driver_id})
+
 @app.get("/driver/{driver_id}")
 async def driver_detail_json(driver_id: str):
     driver_doc = db.collection("drivers").document(driver_id).get()
@@ -71,6 +75,8 @@ async def get_all_teams():
         return JSONResponse(status_code=200, content={"teams": team_list})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+    
+    
 
 
 
