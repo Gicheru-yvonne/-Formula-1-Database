@@ -74,46 +74,53 @@
             style="display: block; margin-top: 20px; padding: 10px 20px; background-color: blue; color: white; border: none; cursor: pointer;">
         Back to Home
     </button>
-    
 
     <script>
-        function loadAllTeams() {
-            const resultsList = document.getElementById("all-teams-list");
-            resultsList.innerHTML = ""; 
-    
-            firebase.auth().onAuthStateChanged((user) => {
-                fetch('/all_teams')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (!data.teams || data.teams.length === 0) {
-                            resultsList.innerHTML = "<li>No teams available.</li>";
-                        } else {
-                            data.teams.forEach(team => {
-                                const listItem = document.createElement("li");
-                                listItem.innerHTML = `<a href="/team/${team.id}">${team.team_name}</a>`;
-    
-                                if (user) { // Show "Edit" button only if user is logged in
-                                    const editButton = document.createElement("button");
-                                    editButton.innerText = "Edit";
-                                    editButton.onclick = function () {
-                                        window.location.href = `/edit_team/${team.id}`;
-                                    };
-                                    listItem.appendChild(editButton);
-                                }
-                                resultsList.appendChild(listItem);
-                            });
+function loadAllTeams() {
+    const resultsList = document.getElementById("all-teams-list");
+    resultsList.innerHTML = ""; 
+
+    firebase.auth().onAuthStateChanged((user) => {
+        fetch('/all_teams')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.teams || data.teams.length === 0) {
+                    resultsList.innerHTML = "<li>No teams available.</li>";
+                } else {
+                    data.teams.forEach(team => {
+                        const listItem = document.createElement("li");
+                        listItem.innerHTML = `<a href="/team/${team.id}">${team.team_name}</a>`;
+
+                        if (user) {  
+                            // Add Edit Button
+                            const editButton = document.createElement("button");
+                            editButton.innerText = "Edit";
+                            editButton.onclick = function () {
+                                window.location.href = `/edit_team/${team.id}`;
+                            };
+                            listItem.appendChild(editButton);
+
+                            // Add Delete Button
+                            const deleteButton = document.createElement("button");
+                            deleteButton.innerText = "Delete";
+                            deleteButton.onclick = function () {
+                                deleteTeam(team.id);
+                            };
+                            listItem.appendChild(deleteButton);
                         }
-                    })
-                    .catch(error => {
-                        console.error("Error:", error);
-                        alert("Failed to load teams.");
+                        resultsList.appendChild(listItem);
                     });
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Failed to load teams.");
             });
-        }
-    
+    });
+}
+
         window.onload = loadAllTeams;
    
-    
 
         function queryTeams() {
             const attribute = document.getElementById("query-attribute").value;
@@ -142,7 +149,11 @@
                 } else {
                     data.teams.forEach(team => {
                         const listItem = document.createElement("li");
-                        listItem.innerHTML = `<a href="/team/${team.id}">${team.team_name}</a>`;
+                        listItem.innerHTML = `
+    <a href="/team/${team.id}">${team.team_name}</a>
+    <button onclick="editTeam('${team.id}')">Edit</button>
+    <button onclick="deleteTeam('${team.id}')">Delete</button>
+`;
                         resultsList.appendChild(listItem);
                     });
                 }
@@ -158,7 +169,39 @@
             loadAllTeams();
         };
     </script>
-
+<script>
+    function deleteTeam(teamId) {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            alert("You must be logged in to delete a team.");
+            return;
+        }
+    
+        if (!confirm("Are you sure you want to delete this team? This action cannot be undone.")) {
+            return;
+        }
+    
+        user.getIdToken().then((token) => {
+            fetch(`/delete_team/${teamId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || "Team deleted successfully!");
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Failed to delete team.");
+            });
+        });
+    }
+    </script>
+    
 </body>
 </html>
     

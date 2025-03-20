@@ -270,3 +270,51 @@ async def update_team(team_id: str, updated_team: Team, authorization: str = Hea
     except Exception as e:
         print("❌ Error updating team:", str(e))
         return JSONResponse(status_code=500, content={"error": str(e)})
+@app.delete("/delete_driver/{driver_id}")
+async def delete_driver(driver_id: str, authorization: str = Header(None)):
+    try:
+        if not authorization or "Bearer " not in authorization:
+            raise HTTPException(status_code=401, detail="Missing authentication token")
+
+        token = authorization.replace("Bearer ", "").strip()
+        decoded_token = auth.verify_id_token(token)
+        user_id = decoded_token.get("uid", "Unknown User")
+
+        driver_ref = db.collection("drivers").document(driver_id)
+        if not driver_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Driver not found")
+
+        driver_ref.delete()
+        return JSONResponse(status_code=200, content={"message": "Driver deleted successfully!"})
+
+    except HTTPException as http_err:
+        return JSONResponse(status_code=http_err.status_code, content={"error": http_err.detail})
+
+    except Exception as e:
+        print("❌ Error deleting driver:", str(e))
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.delete("/delete_team/{team_id}")
+async def delete_team(team_id: str, authorization: str = Header(None)):
+    try:
+        if not authorization or "Bearer " not in authorization:
+            raise HTTPException(status_code=401, detail="Missing authentication token")
+
+        token = authorization.replace("Bearer ", "").strip()
+        decoded_token = auth.verify_id_token(token)
+        user_id = decoded_token.get("uid", "Unknown User")
+
+        team_ref = db.collection("teams").document(team_id)
+        if not team_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Team not found")
+
+        team_ref.delete()
+        return JSONResponse(status_code=200, content={"message": "Team deleted successfully!"})
+
+    except HTTPException as http_err:
+        return JSONResponse(status_code=http_err.status_code, content={"error": http_err.detail})
+
+    except Exception as e:
+        print("❌ Error deleting team:", str(e))
+        return JSONResponse(status_code=500, content={"error": str(e)})

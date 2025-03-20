@@ -1,10 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Driver</title>
+    
+   
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    
     <script src="/static/firebase-login.js"></script>
+
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <h1>Edit Driver</h1>
@@ -54,36 +60,50 @@
         }
 
         function updateDriver() {
-            const driverId = document.getElementById("driver-id").value;
-            const updatedData = {
-                driver_name: document.getElementById("driver_name").value.trim(),
-                age: parseInt(document.getElementById("age").value),
-                points_scored: parseInt(document.getElementById("points_scored").value),
-                world_titles: parseInt(document.getElementById("world_titles").value),
-                pole_positions: parseInt(document.getElementById("pole_positions").value),
-                fastest_laps: parseInt(document.getElementById("fastest_laps").value),
-                team: document.getElementById("team").value.trim()
-            };
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert("You must be logged in to update a driver.");
+        return;
+    }
 
-            fetch(`/update_driver/${driverId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    alert("✅ Driver updated successfully!");
-                    window.location.href = "/add_driver_page";
-                } else {
-                    alert("Error: " + data.error);
-                }
-            })
-            .catch(error => {
-                console.error("Error updating driver:", error);
-                alert("Failed to update driver.");
-            });
-        }
+    user.getIdToken().then((token) => {
+        const driverId = document.getElementById("driver-id").value;
+        const updatedData = {
+            driver_name: document.getElementById("driver_name").value.trim(),
+            age: parseInt(document.getElementById("age").value),
+            points_scored: parseInt(document.getElementById("points_scored").value),
+            world_titles: parseInt(document.getElementById("world_titles").value),
+            pole_positions: parseInt(document.getElementById("pole_positions").value),
+            fastest_laps: parseInt(document.getElementById("fastest_laps").value),
+            team: document.getElementById("team").value.trim()
+        };
+
+        fetch(`/update_driver/${driverId}`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // 🔥 Ensure token is included
+            },
+            body: JSON.stringify(updatedData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert("✅ Driver updated successfully!");
+                window.location.href = "/add_driver_page";
+            } else {
+                alert("Error: " + data.error);
+            }
+        })
+        .catch(error => {
+            console.error("Error updating driver:", error);
+            alert("Failed to update driver.");
+        });
+    }).catch(error => {
+        console.error("Error getting token:", error);
+        alert("Failed to authenticate. Please log in again.");
+    });
+}
 
         window.onload = loadDriverData;
     </script>
