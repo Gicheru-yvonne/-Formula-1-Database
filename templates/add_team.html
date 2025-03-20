@@ -80,25 +80,40 @@
         function loadAllTeams() {
             const resultsList = document.getElementById("all-teams-list");
             resultsList.innerHTML = ""; 
-
-            fetch('/all_teams')  
-            .then(response => response.json())
-            .then(data => {
-                if (!data.teams || data.teams.length === 0) {
-                    resultsList.innerHTML = "<li>No teams available.</li>";
-                } else {
-                    data.teams.forEach(team => {
-                        const listItem = document.createElement("li");
-                        listItem.innerHTML = `<a href="/team/${team.id}">${team.team_name}</a>`;
-                        resultsList.appendChild(listItem);
+    
+            firebase.auth().onAuthStateChanged((user) => {
+                fetch('/all_teams')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.teams || data.teams.length === 0) {
+                            resultsList.innerHTML = "<li>No teams available.</li>";
+                        } else {
+                            data.teams.forEach(team => {
+                                const listItem = document.createElement("li");
+                                listItem.innerHTML = `<a href="/team/${team.id}">${team.team_name}</a>`;
+    
+                                if (user) { // Show "Edit" button only if user is logged in
+                                    const editButton = document.createElement("button");
+                                    editButton.innerText = "Edit";
+                                    editButton.onclick = function () {
+                                        window.location.href = `/edit_team/${team.id}`;
+                                    };
+                                    listItem.appendChild(editButton);
+                                }
+                                resultsList.appendChild(listItem);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("Failed to load teams.");
                     });
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("Failed to load teams.");
             });
         }
+    
+        window.onload = loadAllTeams;
+   
+    
 
         function queryTeams() {
             const attribute = document.getElementById("query-attribute").value;

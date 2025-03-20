@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Team</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="/static/firebase-login.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Edit Team</h1>
+    
+    <div id="edit-team-form">
+        <form>
+            <input type="hidden" id="team_id"> 
+            <label for="team_name">Team Name:</label>
+            <input type="text" id="team_name" required>
+            <label for="year_founded">Year Founded:</label>
+            <input type="number" id="year_founded" required>
+            <label for="constructor_titles">Total Constructor Titles:</label>
+            <input type="number" id="constructor_titles" required>
+            <label for="pole_positions">Total Pole Positions:</label>
+            <input type="number" id="pole_positions" required>
+            <label for="race_wins">Total Race Wins:</label>
+            <input type="number" id="race_wins" required>
+            <label for="previous_season_position">Previous Season Position:</label>
+            <input type="number" id="previous_season_position" required>
+            <button type="button" onclick="updateTeam()">Update Team</button>
+        </form>
+    </div>
+
+    <button onclick="location.href='/'">Back to Home</button>
+
+    <script>
+        function loadTeamDetails() {
+            const teamId = window.location.pathname.split("/").pop(); // ✅ FIXED
+            if (!teamId) {
+                alert("Invalid team ID.");
+                return;
+            }
+
+            document.getElementById("team_id").value = teamId;
+
+            fetch(`/team/${teamId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert("Error: " + data.error);
+                        return;
+                    }
+
+                    
+                    document.getElementById("team_name").value = data.team_name;
+                    document.getElementById("year_founded").value = data.year_founded;
+                    document.getElementById("constructor_titles").value = data.constructor_titles;
+                    document.getElementById("pole_positions").value = data.pole_positions;
+                    document.getElementById("race_wins").value = data.race_wins;
+                    document.getElementById("previous_season_position").value = data.previous_season_position;
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Failed to load team details.");
+                });
+        }
+
+        function updateTeam() {
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert("You must be logged in to edit a team.");
+                return;
+            }
+
+            user.getIdToken().then((token) => {
+                const teamId = document.getElementById("team_id").value;
+                const teamData = {
+                    team_name: document.getElementById("team_name").value.trim(),
+                    year_founded: parseInt(document.getElementById("year_founded").value) || 0,
+                    constructor_titles: parseInt(document.getElementById("constructor_titles").value) || 0,
+                    pole_positions: parseInt(document.getElementById("pole_positions").value) || 0,
+                    race_wins: parseInt(document.getElementById("race_wins").value) || 0,
+                    previous_season_position: parseInt(document.getElementById("previous_season_position").value) || 0,
+                };
+
+                fetch(`/update_team/${teamId}`, {  // ✅ FIXED - added `teamId` in the URL
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(teamData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || "Team updated successfully!");
+                    window.location.href = '/';
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Failed to update team.");
+                });
+            });
+        }
+
+        window.onload = loadTeamDetails;
+    </script>
+</body>
+</html>

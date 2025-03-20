@@ -22,10 +22,16 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
+@app.get("/", response_class=HTMLResponse)
+async def home_page(request: Request):
+    return templates.TemplateResponse("main.html", {"request": request})
+
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse("main.html", {"request": request})
+    print("🚀 Loading login.html")  # Debugging: Check if FastAPI logs this
+    return templates.TemplateResponse("login.html", {"request": request})
+
 
 @app.get("/add_driver_page", response_class=HTMLResponse)
 async def add_driver_page(request: Request):
@@ -38,6 +44,11 @@ async def add_team_page(request: Request):
 @app.get("/edit_driver/{driver_id}", response_class=HTMLResponse)
 async def edit_driver_page(request: Request, driver_id: str):
     return templates.TemplateResponse("edit_driver.html", {"request": request, "driver_id": driver_id})
+
+@app.get("/edit_team/{team_id}", response_class=HTMLResponse)
+async def edit_team_page(request: Request, team_id: str):
+    return templates.TemplateResponse("edit_team.html", {"request": request, "team_id": team_id})
+
 
 @app.get("/driver/{driver_id}")
 async def driver_detail_json(driver_id: str):
@@ -55,6 +66,7 @@ async def get_team_json(team_id: str):
         return JSONResponse(status_code=404, content={"error": "Team not found"})
 
     return JSONResponse(status_code=200, content=team_doc.to_dict())
+
 
 @app.get("/all_drivers")
 async def get_all_drivers():
@@ -212,8 +224,15 @@ async def query_teams(query: Query):
     
 
 @app.post("/update_driver/{driver_id}")
-async def update_driver(driver_id: str, updated_driver: Driver):
+async def update_driver(driver_id: str, updated_driver: Driver, authorization: str = Header(None)):
     try:
+        if not authorization or "Bearer " not in authorization:
+            raise HTTPException(status_code=401, detail="Missing authentication token")
+        
+        token = authorization.replace("Bearer ", "").strip()
+        decoded_token = auth.verify_id_token(token)
+        user_id = decoded_token.get("uid", "Unknown User")
+
         driver_ref = db.collection("drivers").document(driver_id)
         if not driver_ref.get().exists:
             raise HTTPException(status_code=404, detail="Driver not found")
@@ -221,6 +240,33 @@ async def update_driver(driver_id: str, updated_driver: Driver):
         driver_ref.update(updated_driver.dict())
         return JSONResponse(status_code=200, content={"message": "Driver updated successfully!"})
 
+    except HTTPException as http_err:
+        return JSONResponse(status_code=http_err.status_code, content={"error": http_err.detail})
+
     except Exception as e:
         print("❌ Error updating driver:", str(e))
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/update_team/{team_id}")
+async def update_team(team_id: str, updated_team: Team, authorization: str = Header(None)):
+    try:
+        if not authorization or "Bearer " not in authorization:
+            raise HTTPException(status_code=401, detail="Missing authentication token")
+
+        token = authorization.replace("Bearer ", "").strip()
+        decoded_token = auth.verify_id_token(token)
+        user_id = decoded_token.get("uid", "Unknown User")
+
+        team_ref = db.collection("teams").document(team_id)
+        if not team_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Team not found")
+
+        team_ref.update(updated_team.dict())
+        return JSONResponse(status_code=200, content={"message": "Team updated successfully!"})
+
+    except HTTPException as http_err:
+        return JSONResponse(status_code=http_err.status_code, content={"error": http_err.detail})
+
+    except Exception as e:
+        print("❌ Error updating team:", str(e))
         return JSONResponse(status_code=500, content={"error": str(e)})

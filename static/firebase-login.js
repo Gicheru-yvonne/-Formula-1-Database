@@ -13,32 +13,51 @@ const auth = firebase.auth();
 function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-
+ 
+    if (!email || !password) {
+        alert("Please enter both email and password.");
+        return;
+    }
+ 
     auth.signInWithEmailAndPassword(email, password)
     .then((userCredential) => {
         console.log("✅ Login Successful:", userCredential.user.email);
+        // Store the user token in cookies
         document.cookie = `token=${userCredential.user.accessToken}; path=/; SameSite=Strict`;
-        window.location.reload(); 
+        
+        // Redirect to the homepage after successful login
+        window.location.href = '/';  // This ensures you're redirected
     })
     .catch((error) => {
         console.error("❌ Login Error:", error.message);
-        alert("Login failed: " + error.message); 
+        alert("Login failed: " + error.message);
+    });
+ }
+ 
+
+
+
+ function signup() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+        alert("Please enter both email and password.");
+        return;
+    }
+
+    auth.createUserWithEmailAndPassword(email, password)
+    .then(() => {
+        alert("Signup successful! You can now log in.");
+        window.location.href = '/login';  // Directing the user to the login page
+    })
+    .catch((error) => {
+        console.error("❌ Signup Error:", error.message);
+        document.getElementById("error-message").innerText = error.message;
     });
 }
 
 
-function signup() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
-            alert("Signup successful! You can now log in.");
-        })
-        .catch((error) => {
-            document.getElementById("error-message").innerText = error.message;
-        });
-}
 
 function logout() {
     auth.signOut().then(() => {
@@ -49,13 +68,17 @@ function logout() {
 
 auth.onAuthStateChanged((user) => {
     if (user) {
+        console.log("✅ User is logged in:", user.email);
         document.getElementById("user-email").innerText = user.email;
-        document.getElementById("logout-btn").style.display = "block";
+        document.getElementById("logout-btn").style.display = "block"; // Show Logout Button
     } else {
+        console.log("❌ User is logged out.");
         document.getElementById("user-email").innerText = "Guest";
-        document.getElementById("logout-btn").style.display = "none";
+        document.getElementById("logout-btn").style.display = "none"; // Hide Logout Button
     }
 });
+
+
 
 function addDriver() {
     const user = firebase.auth().currentUser;

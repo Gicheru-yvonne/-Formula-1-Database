@@ -76,34 +76,44 @@
     <button onclick="location.href='/login'">Back to Home</button>
 
     <script>
-
-
         function loadAllDrivers() {
-    const resultsList = document.getElementById("all-drivers-list");
-    resultsList.innerHTML = ""; 
-
-    fetch('/all_drivers')  
-    .then(response => response.json())
-    .then(data => {
-        if (!data.drivers || data.drivers.length === 0) {
-            resultsList.innerHTML = "<li>No drivers available.</li>";
-        } else {
-            data.drivers.forEach(driver => {
-                const listItem = document.createElement("li");
-                listItem.innerHTML = `
-                    <a href="/driver/${driver.id}">${driver.driver_name}</a>
-                    <button onclick="editDriver('${driver.id}')">Edit</button>
-                `;
-                resultsList.appendChild(listItem);
+            const resultsList = document.getElementById("all-drivers-list");
+            resultsList.innerHTML = ""; 
+    
+            firebase.auth().onAuthStateChanged((user) => {  // Check if user is logged in
+                fetch('/all_drivers')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.drivers || data.drivers.length === 0) {
+                            resultsList.innerHTML = "<li>No drivers available.</li>";
+                        } else {
+                            data.drivers.forEach(driver => {
+                                const listItem = document.createElement("li");
+                                listItem.innerHTML = `<a href="/driver/${driver.id}">${driver.driver_name}</a>`;
+    
+                                // Show "Edit" button only if user is logged in
+                                if (user) { 
+                                    const editButton = document.createElement("button");
+                                    editButton.innerText = "Edit";
+                                    editButton.onclick = function () {
+                                        window.location.href = `/edit_driver/${driver.id}`;
+                                    };
+                                    listItem.appendChild(editButton);
+                                }
+    
+                                resultsList.appendChild(listItem);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("Failed to load drivers.");
+                    });
             });
         }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        alert("Failed to load drivers.");
-    });
-}
-
+    
+        window.onload = loadAllDrivers;
+    
 
         function queryDrivers() {
             const attribute = document.getElementById("query-attribute").value;

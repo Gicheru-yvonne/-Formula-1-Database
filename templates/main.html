@@ -12,23 +12,80 @@
 <body>
     <h1>Formula 1 Database</h1>
 
-    <div id="login-box">
-        <label>Email:</label>
-        <input type="email" id="email" placeholder="Enter your email">
-        <br>
-        <label>Password:</label>
-        <input type="password" id="password" placeholder="Enter your password">
-        <br>
-        <button onclick="login()">Login</button>
-        <button onclick="signup()">Sign Up</button>
-    </div>
-
+<!-- Login / Logout Section -->
+<div id="user-section">
+    <button id="login-btn" onclick="window.location.href='/login';">Login / Sign Up</button>
     <p>Logged in as: <span id="user-email">Guest</span></p>
     <button id="logout-btn" style="display:none;" onclick="logout()">Sign Out</button>
+</div>
 
-    <hr>
-    <h2>Manage Drivers & Teams</h2>
+<!-- Navigation Section -->
+<div id="manage-section">
     <button onclick="location.href='/add_driver_page'">Add Driver</button>
     <button onclick="location.href='/add_team_page'">Add Team</button>
+</div>
+
+
+    <hr>
+    
+    <!-- List of Drivers -->
+    <h2>List of Drivers</h2>
+    <ul id="driver-list"></ul>
+    
+    <!-- List of Teams -->
+    <h2>List of Teams</h2>
+    <ul id="team-list"></ul>
+
+    <hr>
+    <div id="content"></div>
+    
+    <script>
+        // Fetch the list of drivers and teams
+        function loadLists() {
+            const driverList = document.getElementById('driver-list');
+            const teamList = document.getElementById('team-list');
+
+            // Fetch the drivers from the server
+            fetch('/all_drivers')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.drivers && data.drivers.length > 0) {
+                        data.drivers.forEach(driver => {
+                            const listItem = document.createElement("li");
+                            listItem.innerHTML = `<a href="/driver/${driver.id}">${driver.driver_name}</a>`;
+                            driverList.appendChild(listItem);
+                        });
+                    } else {
+                        driverList.innerHTML = "<li>No drivers available.</li>";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching drivers:", error);
+                    alert("Failed to load drivers.");
+                });
+
+            // Fetch the teams from the server
+            fetch('/all_teams')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.teams && data.teams.length > 0) {
+                        data.teams.forEach(team => {
+                            const listItem = document.createElement("li");
+                            listItem.innerHTML = `<a href="/team/${team.id}">${team.team_name}</a>`;
+                            teamList.appendChild(listItem);
+                        });
+                    } else {
+                        teamList.innerHTML = "<li>No teams available.</li>";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching teams:", error);
+                    alert("Failed to load teams.");
+                });
+        }
+
+        // Load the lists when the page is loaded
+        window.onload = loadLists;
+    </script>
 </body>
 </html>
