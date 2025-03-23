@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Teams</title>
+
+    <link rel="stylesheet" href="/static/styles.css">
+
+   
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <script src="/static/firebase-login.js"></script>
+</head>
+<body>
+    <h1>Compare Two Teams</h1>
+
+    <div id="compare-form">
+        <label for="team1">Select Team 1:</label>
+        <select id="team1"></select>
+
+        <label for="team2">Select Team 2:</label>
+        <select id="team2"></select>
+
+        <button onclick="compareTeams()">Compare</button>
+    </div>
+
+    <hr>
+
+    <div id="comparison-result" style="display:none;">
+        <h2>Team Comparison</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Stat</th>
+                    <th id="name1">Team 1</th>
+                    <th id="name2">Team 2</th>
+                </tr>
+            </thead>
+            <tbody id="comparison-body"></tbody>
+        </table>
+    </div>
+
+    <br>
+    <button onclick="location.href='/'">Back to Home</button>
+
+    <script>
+        function loadTeamOptions() {
+            fetch('/all_teams')
+            .then(response => response.json())
+            .then(data => {
+                const team1 = document.getElementById("team1");
+                const team2 = document.getElementById("team2");
+
+                data.teams.forEach(team => {
+                    const option1 = document.createElement("option");
+                    const option2 = document.createElement("option");
+                    option1.value = option2.value = team.id;
+                    option1.text = option2.text = team.team_name;
+                    team1.add(option1);
+                    team2.add(option2);
+                });
+            });
+        }
+
+        function compareTeams() {
+            const id1 = document.getElementById("team1").value;
+            const id2 = document.getElementById("team2").value;
+
+            if (id1 === id2) {
+                alert("Please select two different teams.");
+                return;
+            }
+
+            Promise.all([
+                fetch(`/team/${id1}`).then(res => res.json()),
+                fetch(`/team/${id2}`).then(res => res.json())
+            ]).then(([data1, data2]) => {
+                document.getElementById("comparison-result").style.display = "block";
+                document.getElementById("name1").textContent = data1.team_name;
+                document.getElementById("name2").textContent = data2.team_name;
+
+                const stats = [
+                    "year_founded", "constructor_titles", "pole_positions",
+                    "race_wins", "previous_season_position"
+                ];
+
+                const tbody = document.getElementById("comparison-body");
+                tbody.innerHTML = "";
+
+                stats.forEach(stat => {
+                    const row = document.createElement("tr");
+                    const statCell = document.createElement("td");
+                    statCell.textContent = stat.replace(/_/g, " ");
+                    row.appendChild(statCell);
+
+                    const val1 = document.createElement("td");
+                    val1.textContent = data1[stat];
+                    row.appendChild(val1);
+
+                    const val2 = document.createElement("td");
+                    val2.textContent = data2[stat];
+                    row.appendChild(val2);
+
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error("Error comparing teams:", error);
+                alert("Something went wrong during comparison.");
+            });
+        }
+
+        window.onload = loadTeamOptions;
+    </script>
+</body>
+</html>

@@ -77,6 +77,10 @@ async def edit_team_page(request: Request, team_id: str):
 async def compare_drivers_page(request: Request):
     return templates.TemplateResponse("compare_drivers.html", {"request": request})
 
+@app.get("/compare_teams_page", response_class=HTMLResponse)
+async def compare_teams_page(request: Request):
+    return templates.TemplateResponse("compare_teams.html", {"request": request})
+
 
 def doc_path(collection, doc_id=""):
     return f"{FIRESTORE_URL}/{collection}/{doc_id}" if doc_id else f"{FIRESTORE_URL}/{collection}"

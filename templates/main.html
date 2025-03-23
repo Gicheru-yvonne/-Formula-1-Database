@@ -12,29 +12,30 @@
 <body>
     <h1>Formula 1 Database</h1>
 
-<!-- Login / Logout Section -->
+
 <div id="user-section">
     <button id="login-btn" onclick="window.location.href='/login';">Login / Sign Up</button>
     <p>Logged in as: <span id="user-email">Guest</span></p>
     <button id="logout-btn" style="display:none;" onclick="logout()">Sign Out</button>
 </div>
 
-<!-- Navigation Section -->
+
 <div id="manage-section">
     <button onclick="location.href='/add_driver_page'">Add Driver</button>
     <button onclick="location.href='/add_team_page'">Add Team</button>
     <button onclick="location.href='/compare_drivers_page'">Compare Drivers</button>
+    <button onclick="location.href='/compare_teams_page'">Compare Teams</button>
 
 </div>
 
 
     <hr>
     
-    <!-- List of Drivers -->
+   
     <h2>List of Drivers</h2>
     <ul id="driver-list"></ul>
     
-    <!-- List of Teams -->
+   
     <h2>List of Teams</h2>
     <ul id="team-list"></ul>
 
@@ -42,12 +43,12 @@
     <div id="content"></div>
     
     <script>
-        // Fetch the list of drivers and teams
+       
         function loadLists() {
             const driverList = document.getElementById('driver-list');
             const teamList = document.getElementById('team-list');
 
-            // Fetch the drivers from the server
+           
             fetch('/all_drivers')
                 .then(response => response.json())
                 .then(data => {
@@ -66,7 +67,7 @@
                     alert("Failed to load drivers.");
                 });
 
-            // Fetch the teams from the server
+           
             fetch('/all_teams')
                 .then(response => response.json())
                 .then(data => {
@@ -86,7 +87,7 @@
                 });
         }
 
-        // Load the lists when the page is loaded
+      
         window.onload = loadLists;
     </script>
 </body>
