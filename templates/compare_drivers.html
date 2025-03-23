@@ -66,52 +66,66 @@
         }
 
         function compareDrivers() {
-            const id1 = document.getElementById("driver1").value;
-            const id2 = document.getElementById("driver2").value;
+    const id1 = document.getElementById("driver1").value;
+    const id2 = document.getElementById("driver2").value;
 
-            if (id1 === id2) {
-                alert("Please select two different drivers.");
-                return;
+    if (id1 === id2) {
+        alert("Please select two different drivers.");
+        return;
+    }
+
+    Promise.all([
+        fetch(`/driver/${id1}`).then(res => res.json()),
+        fetch(`/driver/${id2}`).then(res => res.json())
+    ]).then(([data1, data2]) => {
+        document.getElementById("comparison-result").style.display = "block";
+        document.getElementById("name1").textContent = data1.driver_name;
+        document.getElementById("name2").textContent = data2.driver_name;
+
+        const stats = [
+            "age", "points_scored", "world_titles",
+            "pole_positions", "fastest_laps"
+        ];
+
+        const tbody = document.getElementById("comparison-body");
+        tbody.innerHTML = "";
+
+        stats.forEach(stat => {
+            const row = document.createElement("tr");
+
+            // Row label
+            const statCell = document.createElement("td");
+            statCell.textContent = stat.replace(/_/g, " ");
+            row.appendChild(statCell);
+
+            const val1 = data1[stat];
+            const val2 = data2[stat];
+
+            const td1 = document.createElement("td");
+            const td2 = document.createElement("td");
+            td1.textContent = val1;
+            td2.textContent = val2;
+
+           
+            if (stat === "age") {
+                if (val1 < val2) td1.style.backgroundColor = "lightgreen";
+                else if (val2 < val1) td2.style.backgroundColor = "lightgreen";
+            } else {
+                if (val1 > val2) td1.style.backgroundColor = "lightgreen";
+                else if (val2 > val1) td2.style.backgroundColor = "lightgreen";
             }
 
-            Promise.all([
-                fetch(`/driver/${id1}`).then(res => res.json()),
-                fetch(`/driver/${id2}`).then(res => res.json())
-            ]).then(([data1, data2]) => {
-                document.getElementById("comparison-result").style.display = "block";
-                document.getElementById("name1").textContent = data1.driver_name;
-                document.getElementById("name2").textContent = data2.driver_name;
+            row.appendChild(td1);
+            row.appendChild(td2);
+            tbody.appendChild(row);
+        });
+    })
+    .catch(error => {
+        console.error("Error comparing drivers:", error);
+        alert("Something went wrong during comparison.");
+    });
+}
 
-                const stats = [
-                    "age", "points_scored", "world_titles",
-                    "pole_positions", "fastest_laps", "team"
-                ];
-
-                const tbody = document.getElementById("comparison-body");
-                tbody.innerHTML = "";
-
-                stats.forEach(stat => {
-                    const row = document.createElement("tr");
-                    const statCell = document.createElement("td");
-                    statCell.textContent = stat.replace(/_/g, " ");
-                    row.appendChild(statCell);
-
-                    const val1 = document.createElement("td");
-                    val1.textContent = data1[stat];
-                    row.appendChild(val1);
-
-                    const val2 = document.createElement("td");
-                    val2.textContent = data2[stat];
-                    row.appendChild(val2);
-
-                    tbody.appendChild(row);
-                });
-            })
-            .catch(error => {
-                console.error("Error comparing drivers:", error);
-                alert("Something went wrong during comparison.");
-            });
-        }
 
         window.onload = loadDriverOptions;
     </script>

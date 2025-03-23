@@ -27,3 +27,9 @@ button:hover {
 #logout-btn {
     margin-top: 20px;
 }
+
+
+td {
+    padding: 6px;
+    text-align: center;
+}
