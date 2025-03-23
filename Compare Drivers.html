@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Drivers</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/firebase-login.js"></script>
+</head>
+<body>
+    <h1>Compare Two Drivers</h1>
+
+    <div id="compare-form">
+        <label for="driver1">Select Driver 1:</label>
+        <select id="driver1"></select>
+
+        <label for="driver2">Select Driver 2:</label>
+        <select id="driver2"></select>
+
+        <button onclick="compareDrivers()">Compare</button>
+    </div>
+
+    <hr>
+
+    <div id="comparison-result" style="display:none;">
+        <h2>Driver Comparison</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Stat</th>
+                    <th id="name1">Driver 1</th>
+                    <th id="name2">Driver 2</th>
+                </tr>
+            </thead>
+            <tbody id="comparison-body"></tbody>
+        </table>
+    </div>
+
+    <br>
+    <button onclick="location.href='/'">Back to Home</button>
+
+    <script>
+        function loadDriverOptions() {
+            fetch('/all_drivers')
+            .then(response => response.json())
+            .then(data => {
+                const driver1 = document.getElementById("driver1");
+                const driver2 = document.getElementById("driver2");
+
+                data.drivers.forEach(driver => {
+                    const option1 = document.createElement("option");
+                    const option2 = document.createElement("option");
+                    option1.value = option2.value = driver.id;
+                    option1.text = option2.text = driver.driver_name;
+                    driver1.add(option1);
+                    driver2.add(option2);
+                });
+            });
+        }
+
+        function compareDrivers() {
+            const id1 = document.getElementById("driver1").value;
+            const id2 = document.getElementById("driver2").value;
+
+            if (id1 === id2) {
+                alert("Please select two different drivers.");
+                return;
+            }
+
+            Promise.all([
+                fetch(`/driver/${id1}`).then(res => res.json()),
+                fetch(`/driver/${id2}`).then(res => res.json())
+            ]).then(([data1, data2]) => {
+                document.getElementById("comparison-result").style.display = "block";
+                document.getElementById("name1").textContent = data1.driver_name;
+                document.getElementById("name2").textContent = data2.driver_name;
+
+                const stats = [
+                    "age", "points_scored", "world_titles",
+                    "pole_positions", "fastest_laps", "team"
+                ];
+
+                const tbody = document.getElementById("comparison-body");
+                tbody.innerHTML = "";
+
+                stats.forEach(stat => {
+                    const row = document.createElement("tr");
+                    const statCell = document.createElement("td");
+                    statCell.textContent = stat.replace(/_/g, " ");
+                    row.appendChild(statCell);
+
+                    const val1 = document.createElement("td");
+                    val1.textContent = data1[stat];
+                    row.appendChild(val1);
+
+                    const val2 = document.createElement("td");
+                    val2.textContent = data2[stat];
+                    row.appendChild(val2);
+
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error("Error comparing drivers:", error);
+                alert("Something went wrong during comparison.");
+            });
+        }
+
+        window.onload = loadDriverOptions;
+    </script>
+</body>
+</html>

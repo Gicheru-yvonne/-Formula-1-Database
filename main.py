@@ -14,7 +14,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# ---------------------------- Models ---------------------------- #
+
 class Driver(BaseModel):
     driver_name: str
     age: int
@@ -72,6 +72,10 @@ async def edit_driver_page(request: Request, driver_id: str):
 @app.get("/edit_team/{team_id}", response_class=HTMLResponse)
 async def edit_team_page(request: Request, team_id: str):
     return templates.TemplateResponse("edit_team.html", {"request": request, "team_id": team_id})
+
+@app.get("/compare_drivers_page", response_class=HTMLResponse)
+async def compare_drivers_page(request: Request):
+    return templates.TemplateResponse("compare_drivers.html", {"request": request})
 
 
 def doc_path(collection, doc_id=""):
