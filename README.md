@@ -1,4 +1,4 @@
-# Assignment 1 – Cloud Computing with FastAPI & Firebase
+# Cloud Computing with FastAPI & Firebase
 
 This project was originally built as part of a cloud computing course. It uses **FastAPI** as the backend framework and connects to **Google Firebase** using direct REST API calls and an authorization key (instead of the Firestore Python client).
 
